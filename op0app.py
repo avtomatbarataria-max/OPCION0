@@ -579,73 +579,93 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness", theme=gr.themes.
                     
                     extra_btn.click(calcular_extra, inputs=[extra_alimento, extra_gramos], outputs=extra_resultado)
                 
-                # PESTAÑA 4: CONVERSOR UNIVERSAL
-                with gr.TabItem("🔄 Conversor Universal"):
-                    gr.Markdown("### Calcula equivalencias entre cualquier alimento")
-                    
-                    with gr.Row():
-                        conv_categoria = gr.Dropdown(
-                            choices=["Proteína", "Proteína + Grasa", "Grasa", "Carbohidratos"],
-                            label="Categoría",
-                            value="Proteína"
-                        )
-                    
-                    with gr.Row():
-                        with gr.Column():
-                            conv_origen = gr.Dropdown(
-                                choices=obtener_alimentos_por_categoria("Proteína"),
-                                label="Alimento de origen",
-                                value="PECHUGA DE POLLO SIN PIEL"
-                            )
-                            conv_gramos = gr.Number(
-                                label="Gramos de origen",
-                                value=100,
-                                minimum=0,
-                                step=10
-                            )
-                        
-                        with gr.Column():
-                            conv_destino = gr.Dropdown(
-                                choices=obtener_alimentos_por_categoria("Proteína"),
-                                label="Alimento destino",
-                                value="ATUN"
-                            )
-                    
-                    # Actualizar listas según categoría
-                    conv_categoria.change(
-                        lambda cat: [
-                            gr.Dropdown.update(choices=obtener_alimentos_por_categoria(cat)),
-                            gr.Dropdown.update(choices=obtener_alimentos_por_categoria(cat))
-                        ],
-                        inputs=conv_categoria,
-                        outputs=[conv_origen, conv_destino]
-                    )
-                    
-                    conv_btn = gr.Button("Calcular equivalencia", variant="primary", size="lg")
-                    
-                    with gr.Row():
-                        conv_resultado = gr.Markdown()
-                    
-                    def calcular_equivalencia(cat, origen, gramos, destino):
-                        gramos_dest, prot, carb, gras = convertir_alimento(cat, origen, gramos, destino)
-                        if gramos_dest:
-                            return f"""
-                            ## ✅ RESULTADO:
-                            
-                            ### {gramos}g de {origen} = **{gramos_dest}g** de {destino}
-                            
-                            ### 📊 Macros aproximados para {gramos_dest}g de {destino}:
-                            - **Proteínas:** {prot}g
-                            - **Carbohidratos:** {carb}g
-                            - **Grasas:** {gras}g
-                            """
-                        return "❌ No se pudo calcular la equivalencia. Verifica que los alimentos estén en la misma categoría."
-                    
-                    conv_btn.click(
-                        calcular_equivalencia,
-                        inputs=[conv_categoria, conv_origen, conv_gramos, conv_destino],
-                        outputs=conv_resultado
-                    )
+ # =============================================================================
+# PESTAÑA 4: CONVERSOR UNIVERSAL (VERSIÓN SIMPLIFICADA)
+# =============================================================================
+with gr.TabItem("🔄 Conversor Universal"):
+    gr.Markdown("### Calcula equivalencias entre alimentos de la MISMA categoría")
+    
+    with gr.Row():
+        # Primero seleccionas la categoría
+        conv_categoria = gr.Dropdown(
+            choices=["Proteína", "Proteína + Grasa", "Grasa", "Carbohidratos"],
+            label="1. Selecciona la categoría",
+            value="Proteína"
+        )
+    
+    with gr.Row():
+        with gr.Column():
+            gr.Markdown("**2. Elige alimento de origen**")
+            conv_origen = gr.Dropdown(
+                choices=obtener_alimentos_por_categoria("Proteína"),  # Inicial con Proteína
+                label="Alimento original",
+                value=None  # Sin valor por defecto para forzar selección
+            )
+            conv_gramos = gr.Number(
+                label="Gramos",
+                value=100,
+                minimum=0,
+                step=10
+            )
+        
+        with gr.Column():
+            gr.Markdown("**3. Elige alimento destino**")
+            conv_destino = gr.Dropdown(
+                choices=obtener_alimentos_por_categoria("Proteína"),  # Inicial con Proteína
+                label="Alimento sustituto",
+                value=None  # Sin valor por defecto
+            )
+    
+    # Actualizar AMBAS listas cuando cambia la categoría
+    def actualizar_alimentos_por_categoria(categoria):
+        alimentos = obtener_alimentos_por_categoria(categoria)
+        # Devolver dos actualizaciones: una para origen y otra para destino
+        return [
+            gr.Dropdown.update(choices=alimentos, value=None),
+            gr.Dropdown.update(choices=alimentos, value=None)
+        ]
+    
+    conv_categoria.change(
+        actualizar_alimentos_por_categoria,
+        inputs=conv_categoria,
+        outputs=[conv_origen, conv_destino]
+    )
+    
+    conv_btn = gr.Button("Calcular equivalencia", variant="primary", size="lg")
+    
+    with gr.Row():
+        conv_resultado = gr.Markdown()
+    
+    def calcular_equivalencia_simple(cat, origen, gramos, destino):
+        # Validaciones básicas
+        if not origen or not destino:
+            return "❌ Por favor, selecciona ambos alimentos (origen y destino)"
+        
+        if origen == destino:
+            return "❌ El alimento de origen y destino deben ser diferentes"
+        
+        # Usar la función de conversión existente
+        gramos_dest, prot, carb, gras = convertir_alimento(cat, origen, gramos, destino)
+        
+        if gramos_dest:
+            return f"""
+            ## ✅ RESULTADO:
+            
+            ### {gramos}g de **{origen}** = **{gramos_dest}g** de **{destino}**
+            
+            ### 📊 Macros aproximados para {gramos_dest}g de {destino}:
+            - **Proteínas:** {prot}g
+            - **Carbohidratos:** {carb}g
+            - **Grasas:** {gras}g
+            """
+        else:
+            return "❌ No se pudo calcular la equivalencia. Intenta con otros alimentos."
+    
+    conv_btn.click(
+        calcular_equivalencia_simple,
+        inputs=[conv_categoria, conv_origen, conv_gramos, conv_destino],
+        outputs=conv_resultado
+    )
 
 # =============================================================================
 # LANZAR LA APLICACIÓN
