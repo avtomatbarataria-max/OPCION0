@@ -1,4 +1,3 @@
-# app_gradio.py
 import gradio as gr
 import pandas as pd
 
@@ -118,9 +117,8 @@ snack_comodin = "🍌 1 plátano + 🥤 1 yogurt proteína"
 # =============================================================================
 
 def obtener_alimentos_por_categoria(categoria):
-    """Obtiene lista de alimentos de una categoría con nombres normalizados"""
+    """Obtiene lista de alimentos de una categoría"""
     if categoria == "Proteína":
-        # Devolver los nombres exactamente como están en la tabla
         return sorted(tabla_proteina['ALIMENTO'].tolist())
     elif categoria == "Proteína + Grasa":
         return sorted(tabla_proteina_grasa['ALIMENTO'].tolist())
@@ -143,7 +141,7 @@ def obtener_tabla_por_categoria(categoria):
     return None
 
 def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_destino):
-    """Convierte gramos de un alimento a otro con búsqueda flexible"""
+    """Convierte gramos de un alimento a otro"""
     if not all([categoria, alimento_origen, gramos_origen, alimento_destino]):
         return None, None, None, None
     
@@ -151,40 +149,15 @@ def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_desti
     if tabla is None:
         return None, None, None, None
     
-    # Función para buscar alimento de forma flexible
-    def buscar_alimento(nombre_buscar):
-        if not nombre_buscar:
-            return None
-        
-        nombre_buscar = nombre_buscar.upper().strip()
-        
-        # 1. Búsqueda exacta
-        resultado = tabla[tabla['ALIMENTO'] == nombre_buscar]
-        if not resultado.empty:
-            return resultado.iloc[0]
-        
-        # 2. Búsqueda que contenga (case insensitive)
-        mascara = tabla['ALIMENTO'].str.upper().str.contains(nombre_buscar, na=False)
-        resultado = tabla[mascara]
-        if not resultado.empty:
-            return resultado.iloc[0]
-        
-        # 3. Búsqueda por palabras individuales
-        palabras = nombre_buscar.split()
-        for palabra in palabras:
-            if len(palabra) > 3:  # Solo palabras significativas
-                mascara = tabla['ALIMENTO'].str.upper().str.contains(palabra, na=False)
-                resultado = tabla[mascara]
-                if not resultado.empty:
-                    return resultado.iloc[0]
-        
-        return None
+    # Buscar alimentos exactos
+    origen_row = tabla[tabla['ALIMENTO'] == alimento_origen]
+    destino_row = tabla[tabla['ALIMENTO'] == alimento_destino]
     
-    origen = buscar_alimento(alimento_origen)
-    destino = buscar_alimento(alimento_destino)
-    
-    if origen is None or destino is None:
+    if origen_row.empty or destino_row.empty:
         return None, None, None, None
+    
+    origen = origen_row.iloc[0]
+    destino = destino_row.iloc[0]
     
     # Calcular kcal y gramos equivalentes
     kcal_base = gramos_origen / origen['GRAMOS_POR_100KCAL'] * 100
@@ -196,31 +169,6 @@ def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_desti
     grasas = kcal_base / 100 * destino['GRASAS_X_100KCAL']
     
     return round(gramos_destino, 1), round(proteinas, 1), round(carbos, 1), round(grasas, 1)
-def calcular_info_extra(categoria, alimento, gramos):
-    """Calcula información nutricional de un alimento extra"""
-    tabla = obtener_tabla_por_categoria(categoria)
-    if tabla is None:
-        return None, None, None, None
-    
-    alimento_row = tabla[tabla['ALIMENTO'] == alimento]
-    if alimento_row.empty:
-        return None, None, None, None
-    
-    alimento_data = alimento_row.iloc[0]
-    kcal = gramos / alimento_data['GRAMOS_POR_100KCAL'] * 100
-    proteinas = kcal / 100 * alimento_data['PROTEINAS_X_100KCAL']
-    carbos = kcal / 100 * alimento_data['CARBOS_X_100KCAL']
-    grasas = kcal / 100 * alimento_data['GRASAS_X_100KCAL']
-    
-    return round(kcal, 1), round(proteinas, 1), round(carbos, 1), round(grasas, 1)
-
-# =============================================================================
-# FUNCIONES PARA LA INTERFAZ
-# =============================================================================
-
-def actualizar_alimentos(categoria):
-    """Actualiza las listas de alimentos según la categoría seleccionada"""
-    return gr.Dropdown.update(choices=obtener_alimentos_por_categoria(categoria))
 
 def mostrar_info_comida(tipo, opcion):
     """Muestra información detallada de la comida seleccionada"""
@@ -236,17 +184,13 @@ def mostrar_info_comida(tipo, opcion):
     return ""
 
 # =============================================================================
-# CONSTRUCCIÓN DE LA INTERFAZ GRADIO
+# CONSTRUCCIÓN DE LA INTERFAZ GRADIO (SINTAXIS GRADIO 6.0)
 # =============================================================================
 
-with gr.Blocks(title="🍽️ Planificador de Comidas Fitness", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("""
-    # 🍽️ Planificador de Comidas Fitness
+with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
+    gr.Markdown("# 🍽️ Planificador de Comidas Fitness")
+    gr.Markdown("Herramienta para planificar tus comidas y calcular sustituciones de alimentos basadas en equivalencias calóricas.")
     
-    Herramienta para planificar tus comidas y calcular sustituciones de alimentos basadas en equivalencias calóricas.
-    """)
-    
-    # Sidebar con información (usando accordion)
     with gr.Row():
         with gr.Column(scale=1):
             with gr.Accordion("📋 Información General", open=False):
@@ -279,393 +223,145 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness", theme=gr.themes.
             # Pestañas principales
             with gr.Tabs():
                 # PESTAÑA 1: DESAYUNO
-                with gr.TabItem("🍳 COMIDA 1 (Desayuno)"):
-                    with gr.Row():
-                        desayuno_select = gr.Dropdown(
-                            choices=opciones_desayuno['OPCION'].tolist(),
-                            label="Selecciona opción de desayuno",
-                            value="OPCIÓN 1"
-                        )
+                with gr.Tab("🍳 COMIDA 1 (Desayuno)"):
+                    desayuno_select = gr.Dropdown(
+                        choices=opciones_desayuno['OPCION'].tolist(),
+                        label="Selecciona opción de desayuno",
+                        value="OPCIÓN 1"
+                    )
                     desayuno_info = gr.Markdown()
                     
-                    def update_desayuno(opcion):
-                        return mostrar_info_comida("Desayuno", opcion)
-                    
                     desayuno_select.change(
-                        update_desayuno,
+                        fn=lambda x: mostrar_info_comida("Desayuno", x),
                         inputs=desayuno_select,
                         outputs=desayuno_info
                     )
-                    
                     # Mostrar información inicial
-                    demo.load(update_desayuno, desayuno_select, desayuno_info)
+                    desayuno_info.value = mostrar_info_comida("Desayuno", "OPCIÓN 1")
                 
                 # PESTAÑA 2: COMIDA 2
-                with gr.TabItem("🥗 COMIDA 2"):
-                    with gr.Row():
-                        comida2_select = gr.Dropdown(
-                            choices=opciones_comida2['OPCION'].tolist(),
-                            label="Selecciona opción de Comida 2",
-                            value="OPCIÓN 1"
-                        )
+                with gr.Tab("🥗 COMIDA 2"):
+                    comida2_select = gr.Dropdown(
+                        choices=opciones_comida2['OPCION'].tolist(),
+                        label="Selecciona opción de Comida 2",
+                        value="OPCIÓN 1"
+                    )
                     comida2_info = gr.Markdown()
                     
-                    def update_comida2(opcion):
-                        return mostrar_info_comida("Comida 2", opcion)
-                    
-                    comida2_select.change(update_comida2, comida2_select, comida2_info)
-                    demo.load(update_comida2, comida2_select, comida2_info)
-                    
-                    gr.Markdown("---")
-                    gr.Markdown("### 🔄 Sustituir alimentos")
-                    
-                    with gr.Tabs():
-                        # Sustituir carbohidrato
-                        with gr.TabItem("Sustituir CARBOHIDRATO"):
-                            with gr.Row():
-                                with gr.Column():
-                                    carbo_orig = gr.Textbox(
-                                        label="Alimento original (ej: PASTA)",
-                                        value="PASTA"
-                                    )
-                                    carbo_g = gr.Number(
-                                        label="Gramos originales",
-                                        value=100,
-                                        minimum=0,
-                                        step=10
-                                    )
-                                with gr.Column():
-                                    carbo_categoria = gr.Dropdown(
-                                        choices=["Carbohidratos"],
-                                        label="Categoría",
-                                        value="Carbohidratos",
-                                        interactive=False
-                                    )
-                                    carbo_dest = gr.Dropdown(
-                                        choices=obtener_alimentos_por_categoria("Carbohidratos"),
-                                        label="Sustituir por",
-                                        value="PASTA"
-                                    )
-                            
-                            carbo_btn = gr.Button("Calcular sustitución", variant="primary")
-                            carbo_resultado = gr.Markdown()
-                            
-                            def calcular_carbo(orig, gramos, dest):
-                                gramos_dest, prot, carb, gras = convertir_alimento(
-                                    "Carbohidratos", orig, gramos, dest
-                                )
-                                if gramos_dest:
-                                    return f"""
-                                    ### ✅ Resultado:
-                                    
-                                    **Necesitas {gramos_dest}g de {dest}**
-                                    
-                                    **Información nutricional aproximada:**
-                                    - Proteínas: {prot}g
-                                    - Carbohidratos: {carb}g
-                                    - Grasas: {gras}g
-                                    """
-                                return "❌ No se pudo calcular. Verifica los nombres de los alimentos."
-                            
-                            carbo_btn.click(
-                                calcular_carbo,
-                                inputs=[carbo_orig, carbo_g, carbo_dest],
-                                outputs=carbo_resultado
-                            )
-                        
-                        # Sustituir proteína
-                        with gr.TabItem("Sustituir PROTEÍNA"):
-                            with gr.Row():
-                                with gr.Column():
-                                    prot_orig = gr.Textbox(
-                                        label="Alimento original (ej: POLLO)",
-                                        value="POLLO"
-                                    )
-                                    prot_g = gr.Number(
-                                        label="Gramos originales",
-                                        value=200,
-                                        minimum=0,
-                                        step=10
-                                    )
-                                with gr.Column():
-                                    prot_categoria = gr.Dropdown(
-                                        choices=["Proteína", "Proteína + Grasa"],
-                                        label="Categoría destino",
-                                        value="Proteína"
-                                    )
-                                    prot_dest = gr.Dropdown(
-                                        choices=obtener_alimentos_por_categoria("Proteína"),
-                                        label="Sustituir por",
-                                        value="PECHUGA DE POLLO SIN PIEL"
-                                    )
-                            
-                            # Actualizar alimentos según categoría
-                            prot_categoria.change(
-                                lambda cat: gr.Dropdown.update(choices=obtener_alimentos_por_categoria(cat)),
-                                inputs=prot_categoria,
-                                outputs=prot_dest
-                            )
-                            
-                            prot_btn = gr.Button("Calcular sustitución", variant="primary")
-                            prot_resultado = gr.Markdown()
-                            
-                            def calcular_proteina(cat, orig, gramos, dest):
-                                gramos_dest, prot, carb, gras = convertir_alimento(cat, orig, gramos, dest)
-                                if gramos_dest:
-                                    return f"""
-                                    ### ✅ Resultado:
-                                    
-                                    **Necesitas {gramos_dest}g de {dest}**
-                                    
-                                    **Información nutricional aproximada:**
-                                    - Proteínas: {prot}g
-                                    - Carbohidratos: {carb}g
-                                    - Grasas: {gras}g
-                                    """
-                                return "❌ No se pudo calcular. Verifica los nombres de los alimentos."
-                            
-                            prot_btn.click(
-                                calcular_proteina,
-                                inputs=[prot_categoria, prot_orig, prot_g, prot_dest],
-                                outputs=prot_resultado
-                            )
+                    comida2_select.change(
+                        fn=lambda x: mostrar_info_comida("Comida 2", x),
+                        inputs=comida2_select,
+                        outputs=comida2_info
+                    )
+                    comida2_info.value = mostrar_info_comida("Comida 2", "OPCIÓN 1")
                 
                 # PESTAÑA 3: COMIDA 3
-                with gr.TabItem("🍽️ COMIDA 3"):
-                    with gr.Row():
-                        comida3_select = gr.Dropdown(
-                            choices=opciones_comida3['OPCION'].tolist(),
-                            label="Selecciona opción de Comida 3",
-                            value="OPCIÓN 1"
-                        )
+                with gr.Tab("🍽️ COMIDA 3"):
+                    comida3_select = gr.Dropdown(
+                        choices=opciones_comida3['OPCION'].tolist(),
+                        label="Selecciona opción de Comida 3",
+                        value="OPCIÓN 1"
+                    )
                     comida3_info = gr.Markdown()
                     
-                    def update_comida3(opcion):
-                        return mostrar_info_comida("Comida 3", opcion)
+                    comida3_select.change(
+                        fn=lambda x: mostrar_info_comida("Comida 3", x),
+                        inputs=comida3_select,
+                        outputs=comida3_info
+                    )
+                    comida3_info.value = mostrar_info_comida("Comida 3", "OPCIÓN 1")
+                
+                # PESTAÑA 4: CONVERSOR UNIVERSAL (VERSIÓN SIMPLIFICADA)
+                with gr.Tab("🔄 Conversor Universal"):
+                    gr.Markdown("### Calcula equivalencias entre alimentos de la MISMA categoría")
                     
-                    comida3_select.change(update_comida3, comida3_select, comida3_info)
-                    demo.load(update_comida3, comida3_select, comida3_info)
-                    
-                    gr.Markdown("---")
-                    gr.Markdown("### 🔄 Sustituir alimentos")
-                    
-                    with gr.Tabs():
-                        # Sustituir carbohidrato
-                        with gr.TabItem("Sustituir CARBOHIDRATO"):
-                            with gr.Row():
-                                with gr.Column():
-                                    c3_carbo_orig = gr.Textbox(
-                                        label="Alimento original (ej: PATATA)",
-                                        value="PATATA"
-                                    )
-                                    c3_carbo_g = gr.Number(
-                                        label="Gramos originales",
-                                        value=360,
-                                        minimum=0,
-                                        step=10
-                                    )
-                                with gr.Column():
-                                    c3_carbo_dest = gr.Dropdown(
-                                        choices=obtener_alimentos_por_categoria("Carbohidratos"),
-                                        label="Sustituir por",
-                                        value="ARROZ"
-                                    )
-                            
-                            c3_carbo_btn = gr.Button("Calcular sustitución", variant="primary")
-                            c3_carbo_resultado = gr.Markdown()
-                            
-                            def c3_calcular_carbo(orig, gramos, dest):
-                                gramos_dest, prot, carb, gras = convertir_alimento(
-                                    "Carbohidratos", orig, gramos, dest
-                                )
-                                if gramos_dest:
-                                    return f"""
-                                    ### ✅ Resultado:
-                                    
-                                    **Necesitas {gramos_dest}g de {dest}**
-                                    
-                                    **Información nutricional aproximada:**
-                                    - Proteínas: {prot}g
-                                    - Carbohidratos: {carb}g
-                                    - Grasas: {gras}g
-                                    """
-                                return "❌ No se pudo calcular. Verifica los nombres de los alimentos."
-                            
-                            c3_carbo_btn.click(
-                                c3_calcular_carbo,
-                                inputs=[c3_carbo_orig, c3_carbo_g, c3_carbo_dest],
-                                outputs=c3_carbo_resultado
-                            )
-                        
-                        # Sustituir proteína
-                        with gr.TabItem("Sustituir PROTEÍNA"):
-                            with gr.Row():
-                                with gr.Column():
-                                    c3_prot_orig = gr.Textbox(
-                                        label="Alimento original (ej: SALMON)",
-                                        value="SALMON"
-                                    )
-                                    c3_prot_g = gr.Number(
-                                        label="Gramos originales",
-                                        value=125,
-                                        minimum=0,
-                                        step=10
-                                    )
-                                with gr.Column():
-                                    c3_prot_dest = gr.Dropdown(
-                                        choices=obtener_alimentos_por_categoria("Proteína + Grasa"),
-                                        label="Sustituir por",
-                                        value="TERNERA"
-                                    )
-                            
-                            c3_prot_btn = gr.Button("Calcular sustitución", variant="primary")
-                            c3_prot_resultado = gr.Markdown()
-                            
-                            def c3_calcular_proteina(orig, gramos, dest):
-                                gramos_dest, prot, carb, gras = convertir_alimento(
-                                    "Proteína + Grasa", orig, gramos, dest
-                                )
-                                if gramos_dest:
-                                    return f"""
-                                    ### ✅ Resultado:
-                                    
-                                    **Necesitas {gramos_dest}g de {dest}**
-                                    
-                                    **Información nutricional aproximada:**
-                                    - Proteínas: {prot}g
-                                    - Carbohidratos: {carb}g
-                                    - Grasas: {gras}g
-                                    """
-                                return "❌ No se pudo calcular. Verifica los nombres de los alimentos."
-                            
-                            c3_prot_btn.click(
-                                c3_calcular_proteina,
-                                inputs=[c3_prot_orig, c3_prot_g, c3_prot_dest],
-                                outputs=c3_prot_resultado
-                            )
-                    
-                    gr.Markdown("---")
-                    gr.Markdown("### ➕ Añadir extra de grasa")
+                    conv_categoria = gr.Dropdown(
+                        choices=["Proteína", "Proteína + Grasa", "Grasa", "Carbohidratos"],
+                        label="1. Selecciona la categoría",
+                        value="Proteína"
+                    )
                     
                     with gr.Row():
-                        extra_alimento = gr.Dropdown(
-                            choices=obtener_alimentos_por_categoria("Grasa"),
-                            label="Elige alimento graso",
-                            value="ACEITES"
-                        )
-                        extra_gramos = gr.Number(
-                            label="Gramos",
-                            value=20,
-                            minimum=0,
-                            step=5
-                        )
+                        with gr.Column():
+                            gr.Markdown("**2. Elige alimento de origen**")
+                            conv_origen = gr.Dropdown(
+                                choices=obtener_alimentos_por_categoria("Proteína"),
+                                label="Alimento original",
+                                value=obtener_alimentos_por_categoria("Proteína")[0] if obtener_alimentos_por_categoria("Proteína") else None
+                            )
+                            conv_gramos = gr.Number(
+                                label="Gramos",
+                                value=100,
+                                minimum=0,
+                                step=10
+                            )
+                        
+                        with gr.Column():
+                            gr.Markdown("**3. Elige alimento destino**")
+                            conv_destino = gr.Dropdown(
+                                choices=obtener_alimentos_por_categoria("Proteína"),
+                                label="Alimento sustituto",
+                                value=obtener_alimentos_por_categoria("Proteína")[1] if len(obtener_alimentos_por_categoria("Proteína")) > 1 else obtener_alimentos_por_categoria("Proteína")[0]
+                            )
                     
-                    extra_btn = gr.Button("Calcular información nutricional", variant="secondary")
-                    extra_resultado = gr.Markdown()
+                    # Actualizar listas cuando cambia la categoría
+                    def actualizar_alimentos(categoria):
+                        alimentos = obtener_alimentos_por_categoria(categoria)
+                        if len(alimentos) >= 2:
+                            return [
+                                gr.Dropdown(choices=alimentos, value=alimentos[0]),
+                                gr.Dropdown(choices=alimentos, value=alimentos[1])
+                            ]
+                        elif len(alimentos) == 1:
+                            return [
+                                gr.Dropdown(choices=alimentos, value=alimentos[0]),
+                                gr.Dropdown(choices=alimentos, value=alimentos[0])
+                            ]
+                        else:
+                            return [
+                                gr.Dropdown(choices=[], value=None),
+                                gr.Dropdown(choices=[], value=None)
+                            ]
                     
-                    def calcular_extra(alimento, gramos):
-                        kcal, prot, carb, gras = calcular_info_extra("Grasa", alimento, gramos)
-                        if kcal:
+                    conv_categoria.change(
+                        fn=actualizar_alimentos,
+                        inputs=conv_categoria,
+                        outputs=[conv_origen, conv_destino]
+                    )
+                    
+                    conv_btn = gr.Button("Calcular equivalencia", variant="primary")
+                    
+                    conv_resultado = gr.Markdown()
+                    
+                    def calcular_equivalencia(cat, origen, gramos, destino):
+                        if not origen or not destino:
+                            return "❌ Por favor, selecciona ambos alimentos"
+                        
+                        if origen == destino:
+                            return "❌ Elige alimentos diferentes"
+                        
+                        resultado = convertir_alimento(cat, origen, gramos, destino)
+                        
+                        if resultado[0] is not None:
+                            gramos_dest, prot, carb, gras = resultado
                             return f"""
-                            ### 📊 Información nutricional:
+                            ## ✅ RESULTADO:
                             
-                            **{gramos}g de {alimento} aportan:**
-                            - Calorías: {kcal} kcal
-                            - Proteínas: {prot}g
-                            - Carbohidratos: {carb}g
-                            - Grasas: {gras}g
+                            ### {gramos}g de **{origen}** = **{gramos_dest}g** de **{destino}**
+                            
+                            ### 📊 Macros:
+                            - **Proteínas:** {prot}g
+                            - **Carbohidratos:** {carb}g
+                            - **Grasas:** {gras}g
                             """
-                        return "❌ No se pudo calcular."
+                        else:
+                            return "❌ No se pudo calcular la equivalencia."
                     
-                    extra_btn.click(calcular_extra, inputs=[extra_alimento, extra_gramos], outputs=extra_resultado)
-                
- # =============================================================================
-# PESTAÑA 4: CONVERSOR UNIVERSAL (VERSIÓN SIMPLIFICADA)
-# =============================================================================
-with gr.TabItem("🔄 Conversor Universal"):
-    gr.Markdown("### Calcula equivalencias entre alimentos de la MISMA categoría")
-    
-    with gr.Row():
-        # Primero seleccionas la categoría
-        conv_categoria = gr.Dropdown(
-            choices=["Proteína", "Proteína + Grasa", "Grasa", "Carbohidratos"],
-            label="1. Selecciona la categoría",
-            value="Proteína"
-        )
-    
-    with gr.Row():
-        with gr.Column():
-            gr.Markdown("**2. Elige alimento de origen**")
-            conv_origen = gr.Dropdown(
-                choices=obtener_alimentos_por_categoria("Proteína"),  # Inicial con Proteína
-                label="Alimento original",
-                value=None  # Sin valor por defecto para forzar selección
-            )
-            conv_gramos = gr.Number(
-                label="Gramos",
-                value=100,
-                minimum=0,
-                step=10
-            )
-        
-        with gr.Column():
-            gr.Markdown("**3. Elige alimento destino**")
-            conv_destino = gr.Dropdown(
-                choices=obtener_alimentos_por_categoria("Proteína"),  # Inicial con Proteína
-                label="Alimento sustituto",
-                value=None  # Sin valor por defecto
-            )
-    
-    # Actualizar AMBAS listas cuando cambia la categoría
-    def actualizar_alimentos_por_categoria(categoria):
-        alimentos = obtener_alimentos_por_categoria(categoria)
-        # Devolver dos actualizaciones: una para origen y otra para destino
-        return [
-            gr.Dropdown.update(choices=alimentos, value=None),
-            gr.Dropdown.update(choices=alimentos, value=None)
-        ]
-    
-    conv_categoria.change(
-        actualizar_alimentos_por_categoria,
-        inputs=conv_categoria,
-        outputs=[conv_origen, conv_destino]
-    )
-    
-    conv_btn = gr.Button("Calcular equivalencia", variant="primary", size="lg")
-    
-    with gr.Row():
-        conv_resultado = gr.Markdown()
-    
-    def calcular_equivalencia_simple(cat, origen, gramos, destino):
-        # Validaciones básicas
-        if not origen or not destino:
-            return "❌ Por favor, selecciona ambos alimentos (origen y destino)"
-        
-        if origen == destino:
-            return "❌ El alimento de origen y destino deben ser diferentes"
-        
-        # Usar la función de conversión existente
-        gramos_dest, prot, carb, gras = convertir_alimento(cat, origen, gramos, destino)
-        
-        if gramos_dest:
-            return f"""
-            ## ✅ RESULTADO:
-            
-            ### {gramos}g de **{origen}** = **{gramos_dest}g** de **{destino}**
-            
-            ### 📊 Macros aproximados para {gramos_dest}g de {destino}:
-            - **Proteínas:** {prot}g
-            - **Carbohidratos:** {carb}g
-            - **Grasas:** {gras}g
-            """
-        else:
-            return "❌ No se pudo calcular la equivalencia. Intenta con otros alimentos."
-    
-    conv_btn.click(
-        calcular_equivalencia_simple,
-        inputs=[conv_categoria, conv_origen, conv_gramos, conv_destino],
-        outputs=conv_resultado
-    )
+                    conv_btn.click(
+                        fn=calcular_equivalencia,
+                        inputs=[conv_categoria, conv_origen, conv_gramos, conv_destino],
+                        outputs=conv_resultado
+                    )
 
 # =============================================================================
 # LANZAR LA APLICACIÓN
