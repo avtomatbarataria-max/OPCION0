@@ -118,8 +118,9 @@ snack_comodin = "🍌 1 plátano + 🥤 1 yogurt proteína"
 # =============================================================================
 
 def obtener_alimentos_por_categoria(categoria):
-    """Obtiene lista de alimentos de una categoría"""
+    """Obtiene lista de alimentos de una categoría con nombres normalizados"""
     if categoria == "Proteína":
+        # Devolver los nombres exactamente como están en la tabla
         return sorted(tabla_proteina['ALIMENTO'].tolist())
     elif categoria == "Proteína + Grasa":
         return sorted(tabla_proteina_grasa['ALIMENTO'].tolist())
@@ -142,7 +143,7 @@ def obtener_tabla_por_categoria(categoria):
     return None
 
 def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_destino):
-    """Convierte gramos de un alimento a otro"""
+    """Convierte gramos de un alimento a otro con búsqueda flexible"""
     if not all([categoria, alimento_origen, gramos_origen, alimento_destino]):
         return None, None, None, None
     
@@ -150,15 +151,40 @@ def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_desti
     if tabla is None:
         return None, None, None, None
     
-    # Buscar alimentos
-    origen_row = tabla[tabla['ALIMENTO'] == alimento_origen]
-    destino_row = tabla[tabla['ALIMENTO'] == alimento_destino]
+    # Función para buscar alimento de forma flexible
+    def buscar_alimento(nombre_buscar):
+        if not nombre_buscar:
+            return None
+        
+        nombre_buscar = nombre_buscar.upper().strip()
+        
+        # 1. Búsqueda exacta
+        resultado = tabla[tabla['ALIMENTO'] == nombre_buscar]
+        if not resultado.empty:
+            return resultado.iloc[0]
+        
+        # 2. Búsqueda que contenga (case insensitive)
+        mascara = tabla['ALIMENTO'].str.upper().str.contains(nombre_buscar, na=False)
+        resultado = tabla[mascara]
+        if not resultado.empty:
+            return resultado.iloc[0]
+        
+        # 3. Búsqueda por palabras individuales
+        palabras = nombre_buscar.split()
+        for palabra in palabras:
+            if len(palabra) > 3:  # Solo palabras significativas
+                mascara = tabla['ALIMENTO'].str.upper().str.contains(palabra, na=False)
+                resultado = tabla[mascara]
+                if not resultado.empty:
+                    return resultado.iloc[0]
+        
+        return None
     
-    if origen_row.empty or destino_row.empty:
+    origen = buscar_alimento(alimento_origen)
+    destino = buscar_alimento(alimento_destino)
+    
+    if origen is None or destino is None:
         return None, None, None, None
-    
-    origen = origen_row.iloc[0]
-    destino = destino_row.iloc[0]
     
     # Calcular kcal y gramos equivalentes
     kcal_base = gramos_origen / origen['GRAMOS_POR_100KCAL'] * 100
@@ -170,7 +196,6 @@ def convertir_alimento(categoria, alimento_origen, gramos_origen, alimento_desti
     grasas = kcal_base / 100 * destino['GRASAS_X_100KCAL']
     
     return round(gramos_destino, 1), round(proteinas, 1), round(carbos, 1), round(grasas, 1)
-
 def calcular_info_extra(categoria, alimento, gramos):
     """Calcula información nutricional de un alimento extra"""
     tabla = obtener_tabla_por_categoria(categoria)
