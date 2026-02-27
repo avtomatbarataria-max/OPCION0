@@ -2,64 +2,86 @@ import gradio as gr
 import pandas as pd
 
 # =============================================================================
-# DATOS DE LAS TABLAS DE SUSTITUCIÓN
+# DATOS DE LAS TABLAS DE SUSTITUCIÓN (AMPLIADAS)
 # =============================================================================
 
-# Tabla de alimentos ricos en PROTEÍNA (P)
+# Tabla de alimentos ricos en PROTEÍNA (P) - AMPLIADA
 tabla_proteina = pd.DataFrame({
     'ALIMENTO': [
         'IMPACTWHEY MYPROTEIN', 'PECHUGA DE PAVO', 'PECHUGA DE POLLO SIN PIEL',
         'CLARAS DE HUEVO', 'TERNERA MAGRA', 'QUESO FRESCO BATIDO',
-        'LOMO EMBUCHADO', 'GELATINA NEUTRA', 'ATUN', 'BONITO', 'GAMBAS', 'SEPIA'
+        'LOMO EMBUCHADO', 'GELATINA NEUTRA', 'ATUN', 'BONITO', 'GAMBAS', 'SEPIA',
+        'LOMO DE CERDO MAGRO', 'SOLOMILLO DE CERDO', 'BACALAO', 'LENGUADO',
+        'MERLUZA', 'PULPO', 'MEJILLONES (al vapor)', 'TOFU (firme)',
+        'SEITÁN', 'PECHUGA DE PAVO (fiambre)', 'CECINA (de vaca)'
     ],
-    'GRAMOS_POR_100KCAL': [30, 100, 90, 200, 75, 220, 40, 25, 70, 70, 150, 140],
-    'PROTEINAS_X_100KCAL': [21.5, 17, 20, 22, 16.5, 17, 16, 21, 16.7, 17, 22, 25.2],
-    'CARBOS_X_100KCAL': [2.5, 4, 0, 1, 0, 7.5, 0, 0, 0, 0, 1.5, 1.1],
-    'GRASAS_X_100KCAL': [0, 1, 1, 2, 3.5, 0, 3.5, 0, 3.2, 2.8, 1.5, 0.7]
+    'GRAMOS_POR_100KCAL': [30, 100, 90, 200, 75, 220, 40, 25, 70, 70, 150, 140,
+                           85, 90, 120, 125, 130, 140, 200, 120, 85, 100, 35],
+    'PROTEINAS_X_100KCAL': [21.5, 17, 20, 22, 16.5, 17, 16, 21, 16.7, 17, 22, 25.2,
+                            18, 19, 22, 21, 19, 25, 22, 11, 21, 16, 18],
+    'CARBOS_X_100KCAL': [2.5, 4, 0, 1, 0, 7.5, 0, 0, 0, 0, 1.5, 1.1,
+                         0, 0, 0, 0, 0, 2, 6, 2, 5, 3, 0],
+    'GRASAS_X_100KCAL': [1, 1, 1, 2, 3.5, 0, 3.5, 0, 3.2, 2.8, 1.5, 0.7,
+                         2.5, 2, 0.5, 1.2, 1, 1, 2, 5, 1.5, 1, 3]
 })
 
-# Tabla de alimentos ricos en PROTEÍNA+GRASA (P+G)
+# Tabla de alimentos ricos en PROTEÍNA+GRASA (P+G) - AMPLIADA
 tabla_proteina_grasa = pd.DataFrame({
-    'ALIMENTO': ['SALMON', 'TERNERA', 'HUEVO XXL', 'QUESO', 'BACON', 'JAMÓN SERRANO'],
-    'GRAMOS_POR_100KCAL': [70, 45, 60, 30, 25, 50],
-    'PROTEINAS_X_100KCAL': [15, 13, 8.5, 7.79, 3.5, 14],
-    'CARBOS_X_100KCAL': [0, 0, 0, 0, 1, 0],
-    'GRASAS_X_100KCAL': [4.5, 5, 6.6, 6, 9.25, 6]
+    'ALIMENTO': [
+        'SALMON', 'TERNERA (con grasa)', 'HUEVO XXL', 'QUESO (curado)',
+        'BACON', 'JAMÓN SERRANO', 'COSTILLAS DE CERDO', 'SECRETO IBÉRICO',
+        'CABEZA DE LOMO', 'CHULETAS DE CORDERO', 'CONEJO', 'ATÚN (en aceite)',
+        'SARDINAS (en aceite)', 'QUESO FRESCO (burgos)', 'YOGUR GRIEGO',
+        'TOFU (sedoso)', 'JAMÓN COCIDO (extra)', 'CHORIZO (para cocinar)'
+    ],
+    'GRAMOS_POR_100KCAL': [70, 45, 60, 30, 25, 50, 40, 45, 50, 40, 75, 55, 50, 70, 100, 150, 80, 25],
+    'PROTEINAS_X_100KCAL': [15, 13, 8.5, 7.7, 3.5, 14, 9, 10, 11, 10, 18, 12, 11, 10, 8, 7, 12, 4],
+    'CARBOS_X_100KCAL': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 2, 2, 1],
+    'GRASAS_X_100KCAL': [4.5, 5, 6.6, 9, 9.25, 6, 7, 7, 6.5, 7, 3.5, 6, 6.5, 5, 5, 6, 4, 8]
 })
 
-# Tabla de alimentos ricos en GRASA (G)
+# Tabla de alimentos ricos en GRASA (G) - AMPLIADA
 tabla_grasa = pd.DataFrame({
     'ALIMENTO': [
-        'FRUTOS SECOS', 'ACEITES', 'MANTEQUILLA DE CACAHUETE',
-        'AGUACATE', 'GUACAMOLE', 'ACEITUNAS SIN HUESO',
-        'CHOCOLATE NEGRO 85%', 'HUMMUS MERCADONA'
+        'FRUTOS SECOS (nueces/almendras)', 'ACEITES (AOVE)', 'MANTEQUILLA DE CACAHUETE',
+        'AGUACATE', 'GUACAMOLE', 'ACEITUNAS SIN HUESO', 'CHOCOLATE NEGRO 85%',
+        'HUMMUS MERCADONA', 'ANACARDOS', 'NUECES DE MACADAMIA', 'SEMILLAS DE CHÍA',
+        'SEMILLAS DE LINO', 'PIPAS DE GIRASOL', 'TAHINI', 'MANTEQUILLA DE ALMENDRA',
+        'COCO RALLADO (seco)', 'LECHE DE COCO (en conserva)'
     ],
-    'GRAMOS_POR_100KCAL': [17, 10, 16, 60, 50, 65, 18, 35],
-    'PROTEINAS_X_100KCAL': [3, 0, 5, 1, 1, 1, 2, 2],
-    'CARBOS_X_100KCAL': [4, 0, 2, 5, 5, 5, 4, 3],
-    'GRASAS_X_100KCAL': [8, 11, 8, 9, 8, 10, 8, 9]
+    'GRAMOS_POR_100KCAL': [17, 11, 16, 60, 50, 65, 18, 35, 18, 15, 18, 18, 18, 17, 16, 18, 45],
+    'PROTEINAS_X_100KCAL': [3, 0, 5, 1, 1, 1, 2, 2, 4, 1, 4, 4, 4, 3, 5, 2, 1],
+    'CARBOS_X_100KCAL': [4, 0, 2, 5, 5, 5, 4, 3, 4, 2, 5, 4, 2, 3, 3, 5, 2],
+    'GRASAS_X_100KCAL': [9, 11, 8, 9, 8, 10, 8, 9, 8, 11, 7, 8, 8.5, 9, 8, 8, 10]
 })
 
-# Tabla de alimentos ricos en CARBOHIDRATOS (C)
+# Tabla de alimentos ricos en CARBOHIDRATOS (C) - AMPLIADA
 tabla_carbos = pd.DataFrame({
     'ALIMENTO': [
-        'ARROZ', 'PASTA', 'PATATA', 'LEGUMBRES', 'CHIPS DE PATATA',
-        'PURE DE PATATA', 'PAN BARRA 100% INTEGRAL', 'PAN ESPELTA INTEGRAL MOLDE',
-        'TORTITAS DE ARROZ', 'CEREALES CORNFLAKES', 'HARINA DE ARROZ',
-        'COPOS DE AVENA', 'CEREALES AVENA CRUNCHY', 'PLATANO', 'DATILES',
-        'HIGOS SECOS', 'MANGO', 'MANZANA'
+        'ARROZ', 'PASTA', 'PATATA', 'LEGUMBRES (lentejas/garbanzos)',
+        'GNOCCHIS DE PATATA', 'PURÉ DE PATATA', 'PAN BARRA 100% INTEGRAL',
+        'PAN ESPELTA INTEGRAL MOLDE', 'TORTITAS DE ARROZ', 'CEREALES CORNFLAKES',
+        'HARINA DE ARROZ', 'COPOS DE AVENA', 'CEREALES AVENA CRUNCHY',
+        'PLATANO', 'DATILES', 'HIGOS SECOS', 'MANGO', 'MANZANA', 'QUINOA',
+        'BONIATO / BATATA', 'PAN DE CENTENO INTEGRAL', 'MAÍZ COCIDO',
+        'TRIGO SARRACENO', 'MIJO', 'COPOS DE QUINOA', 'PALOMITAS (sin aceite)',
+        'CALABAZA', 'REMOLACHA COCIDA'
     ],
     'GRAMOS_POR_100KCAL': [
-        30, 30, 130, 30, 55, 30, 45, 45, 3.5, 25, 30, 27, 26, 100, 37, 37, 150, 200
+        30, 30, 130, 30, 55, 30, 45, 45, 3.5, 25, 30, 27, 26, 100, 37, 37, 150, 200,
+        30, 120, 45, 100, 30, 30, 30, 35, 400, 200
     ],
     'PROTEINAS_X_100KCAL': [
-        3, 3.5, 1.5, 7.7, 1.1, 2.2, 3.5, 3.5, 3, 2, 2.5, 4, 3.4, 1.3, 0.7, 1.3, 1, 0.6
+        3, 3.5, 1.5, 7.7, 1, 2.2, 3.5, 3.5, 3, 2, 2.5, 4, 3.4, 1.3, 0.7, 1.3, 1, 0.6,
+        4, 1.2, 4, 3, 4, 3, 5, 4, 3, 3
     ],
     'CARBOS_X_100KCAL': [
-        22, 20, 20, 18, 22.9, 22.8, 20, 20, 23, 21, 22, 14.68, 17.2, 27, 24.2, 20.4, 28, 24
+        22, 20, 20, 18, 22.9, 22.8, 20, 20, 23, 21, 22, 14.6, 17.2, 27, 24.2, 20.4, 28, 24,
+        19, 22, 18, 21, 21, 23, 18, 19, 22, 22
     ],
     'GRASAS_X_100KCAL': [
-        0, 1, 2.3, 0, 0, 0.1, 0, 1, 1, 0, 0, 2, 1.5, 0.4, 0.2, 0.5, 0, 0.4
+        0, 1, 2.3, 0, 0, 0.1, 0, 1, 1, 0, 0, 2, 1.5, 0.4, 0.2, 0.5, 0, 0.4,
+        1.5, 0.2, 1, 1, 0.5, 0.5, 1.5, 2, 1, 0.2
     ]
 })
 
@@ -79,7 +101,7 @@ opciones_desayuno = pd.DataFrame({
 opciones_comida2 = pd.DataFrame({
     'OPCION': ['OPCIÓN 1', 'OPCIÓN 2', 'OPCIÓN 3', 'OPCIÓN 4', 'OPCIÓN 5', 'OPCIÓN 6'],
     'NOMBRE': [
-        'SPAGUETTIS AL AIILO', 'GNOCCHIS CON POLLO', 'LENTEJAS',
+        'SPAGUETTIS AL AILLO', 'GNOCCHIS CON POLLO', 'LENTEJAS',
         'NOODLES DE POLLO', 'ENSALADA DE PASTA', 'BOLOGNESA'
     ],
     'CARBOHIDRATO': [
@@ -184,10 +206,10 @@ def mostrar_info_comida(tipo, opcion):
     return ""
 
 # =============================================================================
-# CONSTRUCCIÓN DE LA INTERFAZ GRADIO (SINTAXIS GRADIO 6.0)
+# CONSTRUCCIÓN DE LA INTERFAZ GRADIO
 # =============================================================================
 
-with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
+with gr.Blocks(title="🍽️ Planificador de Comidas Fitness", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# 🍽️ Planificador de Comidas Fitness")
     gr.Markdown("Herramienta para planificar tus comidas y calcular sustituciones de alimentos basadas en equivalencias calóricas.")
     
@@ -209,14 +231,14 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
             with gr.Accordion("🍌 Snack Comodín", open=False):
                 gr.Markdown(snack_comodin)
             
-            with gr.Accordion("📊 Ver Tablas", open=False):
-                with gr.Tab("Proteína"):
+            with gr.Accordion("📊 Ver Tablas Ampliadas", open=False):
+                with gr.Tab("Proteína (25+ alimentos)"):
                     gr.Dataframe(tabla_proteina)
-                with gr.Tab("Proteína+Grasa"):
+                with gr.Tab("Proteína+Grasa (18 alimentos)"):
                     gr.Dataframe(tabla_proteina_grasa)
-                with gr.Tab("Grasa"):
+                with gr.Tab("Grasa (17 alimentos)"):
                     gr.Dataframe(tabla_grasa)
-                with gr.Tab("Carbohidratos"):
+                with gr.Tab("Carbohidratos (28 alimentos)"):
                     gr.Dataframe(tabla_carbos)
         
         with gr.Column(scale=3):
@@ -271,9 +293,10 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
                     )
                     comida3_info.value = mostrar_info_comida("Comida 3", "OPCIÓN 1")
                 
-                # PESTAÑA 4: CONVERSOR UNIVERSAL (VERSIÓN SIMPLIFICADA)
-                with gr.Tab("🔄 Conversor Universal"):
+                # PESTAÑA 4: CONVERSOR UNIVERSAL (AMPLIADO)
+                with gr.Tab("🔄 Conversor Universal Ampliado"):
                     gr.Markdown("### Calcula equivalencias entre alimentos de la MISMA categoría")
+                    gr.Markdown("🔍 **Ahora con más de 80 alimentos disponibles en total**")
                     
                     conv_categoria = gr.Dropdown(
                         choices=["Proteína", "Proteína + Grasa", "Grasa", "Carbohidratos"],
@@ -353,6 +376,9 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
                             - **Proteínas:** {prot}g
                             - **Carbohidratos:** {carb}g
                             - **Grasas:** {gras}g
+                            
+                            ---
+                            *Equivalencia basada en 100 kcal del alimento original*
                             """
                         else:
                             return "❌ No se pudo calcular la equivalencia."
@@ -362,6 +388,36 @@ with gr.Blocks(title="🍽️ Planificador de Comidas Fitness") as demo:
                         inputs=[conv_categoria, conv_origen, conv_gramos, conv_destino],
                         outputs=conv_resultado
                     )
+                    
+                    # Información adicional sobre las tablas ampliadas
+                    with gr.Accordion("📈 Estadísticas de las tablas ampliadas", open=False):
+                        gr.Markdown(f"""
+                        ### Totales por categoría:
+                        - **Proteína:** {len(tabla_proteina)} alimentos (incluye carnes de cerdo, pescados, mariscos y opciones vegetales)
+                        - **Proteína + Grasa:** {len(tabla_proteina_grasa)} alimentos
+                        - **Grasa:** {len(tabla_grasa)} alimentos
+                        - **Carbohidratos:** {len(tabla_carbos)} alimentos
+                        
+                        ### 🥩 Nuevas carnes de cerdo incluidas:
+                        - Lomo de cerdo magro
+                        - Solomillo de cerdo
+                        - Costillas de cerdo
+                        - Secreto ibérico
+                        - Cabeza de lomo
+                        - Jamón cocido extra
+                        - Chorizo (para cocinar)
+                        
+                        ### 🐟 Nuevos pescados y mariscos:
+                        - Bacalao, Lenguado, Merluza
+                        - Pulpo, Mejillones
+                        - Atún y sardinas en aceite
+                        
+                        ### 🌱 Nuevas opciones vegetales:
+                        - Tofu (firme y sedoso)
+                        - Seitán
+                        - Hummus, Tahini
+                        - Semillas variadas
+                        """)
 
 # =============================================================================
 # LANZAR LA APLICACIÓN
